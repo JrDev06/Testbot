@@ -5,14 +5,34 @@ function formatResponse(response) {
   return response.replace(/\*\*(.*?)\*\*/g, (match, p1) => convertToGothic(p1));
 }
 
+async function handleImage(api, event, imageUrl, query, thinkingMessageID) {
+  const geminiUrl = `https://deku-rest-api.gleeze.com/gemini?prompt=${encodeURIComponent(query)}&url=${encodeURIComponent(imageUrl)}`;
+  const { data } = await axios.get(geminiUrl);
+  const formattedResponse = `🤖 | 𝗖𝗛𝗔𝗧-𝗚𝗣𝗧-𝟰𝗢
+━━━━━━━━━━━━━━━━━━
+${data.gemini}
+━━━━━━━━━━━━━━━━━━`;
+  await api.editMessage(formattedResponse, thinkingMessageID);
+}
+
 module.exports = {
   name: "gpt4o",
   description: "Ask GPT anything.",
   prefixRequired: false,
   adminOnly: false,
   async execute(api, event, args) {
+    const thinkingMessage = await api.sendMessage(convertToGothic("Thinking... 🤔"), event.threadID, event.messageID);
+    const thinkingMessageID = thinkingMessage.messageID;
+
+    if (event.messageReply && event.messageReply.attachments.length > 0) {
+      const imageUrl = event.messageReply.attachments[0].url;
+      const query = args.length > 0 ? args.join(" ") : "Please describe this image.";
+      await handleImage(api, event, imageUrl, query, thinkingMessageID);
+      return;
+    }
+
     if (args.length === 0) {
-      return api.sendMessage(convertToGothic("Please provide a question."), event.threadID, event.messageID);
+      return api.sendMessage(convertToGothic("Please provide a question or reply to an image."), event.threadID, event.messageID);
     }
 
     const query = args.join(" ");
@@ -20,9 +40,6 @@ module.exports = {
     const apiUrl = `https://deku-rest-api.gleeze.com/api/gpt-4o?q=${encodeURIComponent(query)}&uid=${userId}`;
 
     try {
-      const thinkingMessage = await api.sendMessage(convertToGothic("Thinking... 🤔"), event.threadID, event.messageID);
-      const thinkingMessageID = thinkingMessage.messageID;
-
       const { data } = await axios.get(apiUrl);
       const formattedResponse = `🤖 | 𝗖𝗛𝗔𝗧-𝗚𝗣𝗧-𝟰𝗢
 ━━━━━━━━━━━━━━━━━━
