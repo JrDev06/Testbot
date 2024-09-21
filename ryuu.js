@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const login = require('./unofficial-fca');
+const { convertToGothic } = require('./fontUtils');
 const express = require('express');
 const cron = require('node-cron');
 const app = express();
