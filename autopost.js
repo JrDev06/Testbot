@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const axios = require('axios');
-const { convertToGothic } = require('../fontUtils');
+const { convertToGothic } = require('./fontUtils');
 
 let isCronStarted = false;
 
