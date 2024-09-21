@@ -1,6 +1,10 @@
 const axios = require('axios');
 const { convertToGothic } = require('../fontUtils');
 
+function formatResponse(response) {
+  return response.replace(/\*\*(.*?)\*\*/g, (match, p1) => convertToGothic(p1));
+}
+
 module.exports = {
   name: "gpt4o",
   description: "Ask GPT anything.",
@@ -13,19 +17,17 @@ module.exports = {
 
     const query = args.join(" ");
     const userId = event.senderID;
-    const apiUrl = `https://jonellccprojectapis10.adaptable.app/api/gptconvo?ask=${encodeURIComponent(query)}&id=${userId}`;
+    const apiUrl = `https://deku-rest-api.gleeze.com/api/gpt-4o?q=${encodeURIComponent(query)}&uid=${userId}`;
 
     try {
       const thinkingMessage = await api.sendMessage(convertToGothic("Thinking... 🤔"), event.threadID, event.messageID);
       const thinkingMessageID = thinkingMessage.messageID;
 
-      const response = await axios.get(apiUrl);
-      const gptResponse = response.data.response;
-      
-      const formattedResponse = `       𝗚𝗣𝗧𝟰𝗢
-═══════════════════
-${gptResponse}
-═══════════════════`;
+      const { data } = await axios.get(apiUrl);
+      const formattedResponse = `🤖 | 𝗖𝗛𝗔𝗧-𝗚𝗣𝗧-𝟰𝗢
+━━━━━━━━━━━━━━━━━━
+${formatResponse(data.result)}
+━━━━━━━━━━━━━━━━━━`;
 
       await api.editMessage(formattedResponse, thinkingMessageID);
       
