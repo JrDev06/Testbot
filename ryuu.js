@@ -5,6 +5,7 @@ const login = require('./unofficial-fca');
 const { convertToGothic } = require('./fontUtils');
 const express = require('express');
 const cron = require('node-cron');
+const autopost = require('./autopost'); 
 const app = express();
 
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
@@ -13,7 +14,7 @@ const apiOptions = config.apiOptions;
 const adminBot = config.adminBot || [];
 const autoLoad = config.autoLoad ?? false;
 const autogreet = config.autogreet ?? false;
-const proxy = config.proxy; 
+const proxy = config.proxy;
 
 let commands = {};
 let events = {};
@@ -173,6 +174,10 @@ const runBot = () => {
                     scheduled: true,
                     timezone: "Asia/Manila"
                 });
+            }
+
+            if (config.autopost) { 
+                autopost.handleEvent({ api });
             }
 
             process.on('unhandledRejection', (err, p) => {});
