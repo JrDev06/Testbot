@@ -1,11 +1,13 @@
 const { spawn } = require("child_process");
 const express = require("express");
+const path = require("path");
+const cron = require('node-cron');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-    res.send('Ryuu Bot is running');
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(port, '0.0.0.0', () => {
@@ -13,6 +15,10 @@ app.listen(port, '0.0.0.0', () => {
 });
 
 let botProcess = null;
+
+const getRandomRestartHours = () => {
+    return Math.floor(Math.random() * (9 - 7 + 1)) + 7;
+};
 
 const manageBotProcess = (script) => {
     if (botProcess) {
@@ -41,18 +47,13 @@ const manageBotProcess = (script) => {
 
 manageBotProcess("ryuu.js");
 
-process.on('SIGINT', () => {
-    if (botProcess) {
-        botProcess.kill();
-        console.log('Bot process terminated.');
-    }
-    process.exit();
-});
+cron.schedule('0 * * * *', () => {
+    const hours = getRandomRestartHours();
+    console.log(`Scheduled bot restart in ${hours} hours.`);
 
-process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-    if (botProcess) {
-        botProcess.kill();
-    }
-    manageBotProcess("ryuu.js");
+    const restartCron = cron.schedule(`0 */${hours} * * *`, () => {
+        console.log('Restarting bot process due to scheduled interval.');
+        manageBotProcess("ryuu.js");
+        restartCron.stop();
+    });
 });
