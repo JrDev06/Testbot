@@ -10,7 +10,7 @@ async function handleImage(api, event, imageUrl, query, thinkingMessageID) {
   const { data } = await axios.get(geminiUrl);
   const formattedResponse = `🤖 | 𝗖𝗛𝗔𝗧-𝗚𝗣𝗧-𝟰𝗢
 ━━━━━━━━━━━━━━━━━━
-${data.gemini}
+${formatResponse(data.gemini)}
 ━━━━━━━━━━━━━━━━━━`;
   await api.editMessage(formattedResponse, thinkingMessageID);
 }
