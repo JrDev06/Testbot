@@ -9,11 +9,18 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-    console.log(`Ryuu Bot server is running on port ${port} and accessible externally`);
+    console.log(`Ryuu Bot server is running on port ${port}`);
 });
 
-function manageBotProcess(script) {
-    const botProcess = spawn("node", ["--trace-warnings", "--async-stack-traces", script], {
+let botProcess = null;
+
+const manageBotProcess = (script) => {
+    if (botProcess) {
+        botProcess.kill();
+        console.log(`Terminated previous instance of ${script}.`);
+    }
+
+    botProcess = spawn("node", ["--trace-warnings", "--async-stack-traces", script], {
         cwd: __dirname,
         stdio: "inherit",
         shell: true
@@ -21,8 +28,8 @@ function manageBotProcess(script) {
 
     botProcess.on("close", (exitCode) => {
         console.log(`${script} terminated with code: ${exitCode}`);
-        
         if (exitCode !== 0) {
+            console.log(`Restarting ${script} in 3 seconds...`);
             setTimeout(() => manageBotProcess(script), 3000);
         }
     });
@@ -30,8 +37,22 @@ function manageBotProcess(script) {
     botProcess.on("error", (error) => {
         console.error(`Error while starting ${script}: ${error.message}`);
     });
-}
+};
 
 manageBotProcess("ryuu.js");
 
- 
+process.on('SIGINT', () => {
+    if (botProcess) {
+        botProcess.kill();
+        console.log('Bot process terminated.');
+    }
+    process.exit();
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    if (botProcess) {
+        botProcess.kill();
+    }
+    manageBotProcess("ryuu.js");
+});
